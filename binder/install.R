@@ -1,7 +1,7 @@
 install.packages("lattice")
 install.packages("lme4")
 install.packages("ggplot2")
-install.packages("dpyr")
+install.packages("dplyr")
 install.packages("tidyr")
 install.packages("lmerTest")
 install.packages("stargazer")

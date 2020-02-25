@@ -5,7 +5,7 @@
 
 #Smallmouth buffalo catch per unit effort across LTRM study reaches
 #bmbfcpue.csv
-ACMaster<-read.csv(file.choose(),na.strings=".") # this brings your csv file in, the default of read.csv is to treat your header row as it is in the csv as the column headings/variable names 
+ACMaster<-read.csv(file.choose(),na.strings=".") # this brings your csv file in, the default of read.csv is to treat your header row as it is in the csv as the column headings/variable names
 #you can also enter directly in with ACMaster<- read.csv("ACMaster.csv")  The default for read.csv treats NA as missing values, if you have missing values represented by something else, you'll need to use na.strings="." if you missing values are represented by "."
 str(ACMaster) # you should always check the struc
 ACMaster$fyear<-factor(ACMaster$year)
@@ -16,7 +16,7 @@ ACMaster$ffstation<-factor(ACMaster$fstation)
 library(lattice)
 library(lme4)
 library(ggplot2)
-library(dpyr)
+library(dplyr)
 library(tidyr)
 ACMaster2<-na.omit(ACMaster) #remove rows with missing values
 
@@ -42,7 +42,7 @@ boxplot(cpue ~ fyear, data = ACMaster2)
 #checking residuals to observe differences
 E0 <- resid(basic.lm)
 par(mar = c(5,5,2,2))
-boxplot(E0 ~ ffstation, 
+boxplot(E0 ~ ffstation,
         data = ACMaster2,
         xlab = "Field station",
         ylab = "Residuals",
@@ -91,7 +91,7 @@ ggplot(aes(current, cpue), data = ACMaster2) + geom_point() +
 #Could modify model to add covariates? #Let's try adding year to model
 basic.lm2 <- lm(cpue ~ temp + current + factor(gear)+fyear, data = ACMaster2)
 summary(basic.lm2)
-#Besides adding 52 parameters to model, does that really help us 
+#Besides adding 52 parameters to model, does that really help us
 #answer the question anyway?
 
 #if we add these explanatory factor variables, what about sample size?
@@ -100,12 +100,12 @@ ftable(ffstation + stratum ~ fyear, data=ACMaster2)
 
 #Next option - mixed effects model
 
-#Let's run mixed effect model controlling for variation in cpue due to 
+#Let's run mixed effect model controlling for variation in cpue due to
 #differences in year (1|fyear) and differences in reach (1|ffstation)
 buffmm <- lmer(cpue ~ temp + current + factor(gear)+
                  (1|fyear)+(1|ffstation), data = ACMaster2)
 summary(buffmm)
-#uh oh, no p values, what do we do?  
+#uh oh, no p values, what do we do?
 #We have a couple of options
 #1.run model comparison, excluding variables and comparing models
 buffmmA <- lmer(cpue ~ current + factor(gear)+
@@ -122,11 +122,11 @@ anova(buffmm,buffmmC)
 #library(MuMIn) #This will return R2 values
 
 #Nested variables
-#Stratum may affect catch rates too? 
+#Stratum may affect catch rates too?
 #make new nested variable since stratum and reach are likely correlated
 #We can do it a couple ways, we can create new factor which is nested factor
 ACMaster2 <- within(ACMaster2, stratatype <- factor(ffstation:stratum))
-#This would end up looking like this (1|stratatype) or the same is 
+#This would end up looking like this (1|stratatype) or the same is
 #(1|ffstation/stratum)
 
 
@@ -139,7 +139,7 @@ summary(buffmm1)
 confint(buffmm1)
 
 #which is a better model?
-#we can compare random effects on model just like fixed effects 
+#we can compare random effects on model just like fixed effects
 #however, can only alter either random or fixed effects at same time
 anova(buffmm,buffmm1)
 
@@ -181,14 +181,14 @@ ACMaster2$temp2 <- scale(ACMaster2$temp)
 ACMaster2$current2 <- scale(ACMaster2$current)
 
 buffmm2<-glmer(cpue~temp2 + current2 + factor(gear)+
-                (1|fyear)+(1|ffstation)+(1|stratatype), 
+                (1|fyear)+(1|ffstation)+(1|stratatype),
                data = ACMaster2, family = poisson)
 #overdispersion observed may lend itself to negative binomial distribution
 #Mass is used for negative binomial with lme4
 library(MASS)
 
 buffmm2nb<-glmer.nb(cpue~temp + current + factor(gear)+
-                 (1|fyear)+(1|ffstation), 
+                 (1|fyear)+(1|ffstation),
                data = ACMaster2, verbose = TRUE)
 summary(buffmm2nb)
 
@@ -208,7 +208,7 @@ move<-read.csv(file.choose(),na.strings=".")
 str(move)
 move$fID<-factor(move$ID)
 move$Day<-factor(move$Day)
-#Since the same fish is measured 25 times, we need to account for 
+#Since the same fish is measured 25 times, we need to account for
 #that dependenceny
 #What about day?
 #each fish may respond differtly to each day?
@@ -220,8 +220,8 @@ plot(model1,which=1) #check distribution of residuals
 #let's visualize and see what is going on.
 ggplot(move, aes(x = Watertemp, y = distance_km)) +
   geom_point(size = 2) + geom_smooth(method = "lm")
-  
-#now let's add individual fish 
+
+#now let's add individual fish
 ggplot(move, aes(x = Watertemp, y = distance_km, colour = fID)) +
   geom_point(size = 2) + geom_smooth(method = "loess") +
   theme_classic() +
@@ -238,7 +238,7 @@ anova(model2,model3)
 #model taking into account only individual fish ID the best
 
 #The patterns in fish movement related to temperature is not a linear
-#relationship, but should be explored further with GAMM (there 
+#relationship, but should be explored further with GAMM (there
 #appears to be a pattern, but not linear)
 
 
@@ -253,7 +253,7 @@ larval$SiteType<-factor(larval$SiteType)
 #model for each family - we're interested in centrarchids and cyprinids
 centrarchidae<-filter(larval, Family=="Centrarchidae")
 cyprinidae<-filter(larval, Family=="Cyprinidae")
-#How does temperature, site type, and river stage predict 
+#How does temperature, site type, and river stage predict
 #centrarchid and cyprinid larval growth
 
 #please work in groups to build model, and compare different random models
@@ -265,11 +265,11 @@ bird<-read.csv(file.choose(),na.strings=".")
 str(bird)
 
 
-#I pulled from several sources for the material in this workshop, 
-#including UMESC fish graphical browser, UMRR, LTRM, Gabriela Hajduk, 
-#Codingclub workshop, and Zuur et al. 2015 (Beginner's guid to 
+#I pulled from several sources for the material in this workshop,
+#including UMESC fish graphical browser, UMRR, LTRM, Gabriela Hajduk,
+#Codingclub workshop, and Zuur et al. 2015 (Beginner's guid to
 #GLM and GLMM with R)
 
-#For thos interested in ecological statistics and fitting 
+#For thos interested in ecological statistics and fitting
 #more advanced GLMMs and GAMMs, the highland statistics book collection
 #is extremely useful and intuitive
